@@ -2,8 +2,8 @@
 #include <IRremoteESP8266.h>
 #include <IRsend.h>
  
-//const uint16_t kIrLed = 9;              // M5StickCはGPIO9にIRが内蔵
-const uint16_t kIrLed = 32;              // M5StickCはGPIO9にIRが内蔵
+//Port 32 for IR Remote Unit 
+const uint16_t kIrLed = 32;
  
 IRsend irsend(kIrLed);                  // IR送信を宣言
  
