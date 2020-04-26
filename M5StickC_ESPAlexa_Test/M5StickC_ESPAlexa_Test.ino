@@ -77,11 +77,10 @@ void setup()
 
   Serial.begin(115200);
 
-  //setupEspalexa();
+  setupEspalexa();
   setupServo();
 
   xTaskCreatePinnedToCore(servoControl, "servoControl", 4096, NULL, 1, &th[0], 0);
-  //xTaskCreatePinnedToCore(servoControl, "servoControl", 4096, NULL, 2, &th[0], 0);
 }
 
 void ThreeDPrinterSwitch(EspalexaDevice* d) {
@@ -173,11 +172,10 @@ void loop()
   M5.update();  // ボタン状態更新
   printStatus();
   checkButton();
-  //espalexa.loop();
+  espalexa.loop();
   delay(1);
 }
 
-#if 1
 void moveServo()
 {
   if(goal_servo_pos == cur_servo_pos) return;
@@ -194,4 +192,3 @@ void servoControl(void *pvParameters)
     delay(1);
   }
 }
-#endif
