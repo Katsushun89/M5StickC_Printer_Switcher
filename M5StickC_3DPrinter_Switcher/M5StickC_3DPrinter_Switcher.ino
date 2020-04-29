@@ -7,12 +7,28 @@
 //#define ESPALEXA_ASYNC
 #include <Espalexa.h>
 #include <ESP32Servo.h>
+#include <IRremoteESP8266.h>
+#include <IRsend.h>
 #include "config.h"
 
 TaskHandle_t th[4];
 
 const char* device_name = "Printer";
 
+//Port 32 for IR Remote Unit 
+const uint16_t kIrLed = 32;
+IRsend irsend(kIrLed);
+
+enum {
+  REMOTE_OFF = 0,
+  REMOTE_ON,
+};
+
+const uint64_t remote_cmd[] = {
+  0xE730D12EUL, //OFF
+  0xE730E916UL, //ON
+};
+ 
 boolean connectWifi();
 
 enum {
@@ -68,6 +84,11 @@ void setupServo(void)
   Serial.println(cur_servo_pos);
 }
 
+void setupIRRemote(void)
+{
+  irsend.begin();
+}
+
 void setup()
 {
   M5.begin();     // M5StickC初期化
@@ -79,8 +100,25 @@ void setup()
 
   setupEspalexa();
   setupServo();
+  setupIRRemote();
 
   xTaskCreatePinnedToCore(servoControl, "servoControl", 4096, NULL, 1, &th[0], 0);
+}
+
+void switchON(void)
+{
+  Serial.println("ON");
+  sw_state = SW_ON;
+  goal_servo_pos = PWR_ON_POS;
+  irsend.sendNEC(remote_cmd[REMOTE_ON]);
+}
+
+void switchOFF(void)
+{
+  sw_state = SW_OFF;
+  Serial.println("OFF");
+  goal_servo_pos = PWR_OFF_POS;
+  irsend.sendNEC(remote_cmd[REMOTE_OFF]);
 }
 
 void ThreeDPrinterSwitch(EspalexaDevice* d) {
@@ -89,13 +127,9 @@ void ThreeDPrinterSwitch(EspalexaDevice* d) {
   //do what you need to do here
   Serial.print("A changed to ");
   if(d->getValue()){
-    Serial.println("ON");
-    sw_state = SW_ON;
-    goal_servo_pos = PWR_ON_POS;
+    switchON();
   }else{
-    sw_state = SW_OFF;
-    Serial.println("OFF");
-    goal_servo_pos = PWR_OFF_POS;
+    switchOFF();
   }
 }
 
@@ -147,7 +181,7 @@ void printStatus()
     break;
   case SW_NOT_SET:
   default:
-    M5.Lcd.println("NOSET");
+    M5.Lcd.println("     ");
     break;
   }
 }
@@ -156,13 +190,9 @@ void checkButton()
 {
   if(M5.BtnA.wasPressed()){
     if(sw_state == SW_ON){
-      Serial.println("OFF  ");
-      sw_state = SW_OFF;
-      goal_servo_pos = PWR_OFF_POS;
+      switchOFF();
     }else{
-      Serial.println("ON   ");
-      sw_state = SW_ON;
-      goal_servo_pos = PWR_ON_POS;
+      switchON();
     }
   }
 }

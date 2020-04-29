@@ -5,9 +5,8 @@
 //Port 32 for IR Remote Unit 
 const uint16_t kIrLed = 32;
  
-IRsend irsend(kIrLed);                  // IR送信を宣言
+IRsend irsend(kIrLed);
  
-// リモコンコード保存用構造体
 struct REMOTE {
   char name[9];
   uint64_t command;
